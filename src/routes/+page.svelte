@@ -14,10 +14,12 @@
 let selectedTeam=$state();
 function selectTeam() {
     console.log(selectedTeam);
-    store.teamID=selectedTeam;
-    localStorage.setItem('teamID',selectedTeam);
+    store.teamID=selectedTeam-1;
+    localStorage.setItem('teamID',selectedTeam-1);
     goto("/punktetabelle");
 }
+
+console.log(selectedTeam);
 onMount(async ()=>{
         store.teams = await loadTeams();
         teams=store.teams;
@@ -32,17 +34,22 @@ onMount(async ()=>{
 <Separator/>
 
 
-    <ToggleGroup.Root type="single" bind:value={selectedTeam}  class="grid grid-cols-2 gap-2 p-3 w-[90%]">
+    <ToggleGroup.Root type="single" bind:value={selectedTeam} class="grid grid-cols-2 gap-2 p-3 w-[90%]"  >
       
 
     
        {#each teams as team,i}
-      <ToggleGroup.Item value={i}  class="rounded-md border-primary text-base font-normal h-12 w-full">{team}</ToggleGroup.Item>
+       <ToggleGroup.Item
+       value={i+1}
+       class="rounded-md border-primary text-base font-normal h-12 w-full data-[state=on]:bg-slate-200 data-[state=on]:text-black"
+     >
+       {team}
+     </ToggleGroup.Item>
       
   {/each}
 </ToggleGroup.Root>  
 <div class=" px-3 w-[80%]">
-    <Button class="h-12 w-full" onclick={selectTeam}>Team Beitreten</Button>
+    <Button class="h-12 w-full" disabled={!selectedTeam} onclick={selectTeam}>Team Beitreten</Button>
     </div>
 </div>
 

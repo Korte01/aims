@@ -43,9 +43,6 @@ let admin=$state(false)
 	class={`fixed top-0 left-0 z-50 h-full w-64 bg-sidebar text-sidebar-foreground shadow-lg transition-transform duration-300 transform ${
 		isOpen ? 'translate-x-0' : '-translate-x-full'
 	}`}
-	on:touchstart={onTouchStart}
-	on:touchmove={onTouchMove}
-	on:touchend={onTouchEnd}
 >
 	<div class="p-4 pl-16 font-bold text-xl"><img src={logo} alt="Logo" class="w-[70%]   " />
 	</div>
