@@ -75,7 +75,7 @@ let admin=$state(false)
 >
 	☰
 </button>
-<div class="p-4 ml-12">
+<div class="p-4 pl-16 bg-white shadow-md">
 
 
 <img src={logo} alt="Logo" class="w-40  h-auto" />

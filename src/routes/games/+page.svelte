@@ -16,7 +16,7 @@ store.games=await loadGames();
 });
 </script>
 <Sidebar />
-<div class="grid grid-cols-2 gap-4 px-4">
+<div class="grid grid-cols-2 gap-4 px-4 mt-4">
 
 	{#each store.games as game,i}
 		<GameDiv  title={game.title} icon={game.icon} visible={game.visible} isVs={game.isVs} />

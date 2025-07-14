@@ -25,15 +25,15 @@
     
 </script>
 
-<div class="relative bg-red-400 rounded-md p-4  flex flex-col justify-center items-center aspect-square text-white  text-center shadow" 	onclick={() => visible && goto(`/games/${encodeURIComponent(title)}`)}
+<div class="relative bg-red-400 rounded-md p-4  flex flex-col justify-center items-center aspect-square text-white  select-none text-center shadow" 	onclick={() => visible && goto(`/games/${encodeURIComponent(title)}`)}
     >
     {#if visible && !isVs}
     <!-- Fragezeichen in der Ecke -->
-    <div class="absolute top-1 right-1 bg-white text-red-500 rounded-full text-md px-1.5 font-bold shadow">
+    <div class=" select-none absolute top-1 right-1 bg-white text-red-500 rounded-full text-md px-1.5 font-bold shadow">
         {punkte}
     </div>
 {/if}
-	<div class="text-4xl"   class:blur-sm={!visible}>{icon}</div>
-	<div class="mt-2 text-lg font-bold"   class:blur-xs={!visible}>{title}</div>
+	<div class="text-4xl select-none"   class:blur-sm={!visible}>{icon}</div>
+	<div class="mt-2 text-lg font-bold select-none"   class:blur-xs={!visible}>{title}</div>
     <div class=" text-sm font-thin"   class:blur-xs={!visible}>{isVs? "Team vs Team": "Alle Teams"}</div>
 </div>

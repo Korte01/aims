@@ -8,8 +8,11 @@
 	import { loadActiveRound, loadGames, loadSpielplan, loadTeams } from '$lib/service/supabaseAPI.svelte';
 	import { supabase } from '$lib/service/supabaseClient';
 	import { emitDataChanged } from '$lib/store/eventBus';
+	import Button from '$lib/components/ui/button/button.svelte';
+
 
 	let { children } = $props();
+	
 	onMount(async () => {
 		store.teams=await loadTeams();
 		const currentPath = get(page).url.pathname;
@@ -69,6 +72,7 @@
 		})
 		.subscribe();
 
+	
 	// Cleanup (wenn Komponente entladen wird)
 	return () => {
 		supabase.removeChannel(teamsSub);
@@ -81,4 +85,6 @@
 
 
 <div></div>
+
 {@render children()}
+

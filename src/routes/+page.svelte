@@ -11,6 +11,7 @@
 	import { onMount } from "svelte";
 	import { loadTeams } from "$lib/service/supabaseAPI.svelte";
     let teams=$state([]);
+    let loaded=$state(false);
 let selectedTeam=$state();
 function selectTeam() {
     console.log(selectedTeam);
@@ -21,11 +22,17 @@ function selectTeam() {
 
 console.log(selectedTeam);
 onMount(async ()=>{
+    const teamID = localStorage.getItem('teamID');
+    if (teamID) {
+      goto('/punktetabelle');
+    }
         store.teams = await loadTeams();
         teams=store.teams;
+    loaded=true;
     });
 </script>
-<div class="flex flex-col justify-center origin-center h-screen overflow-y-hidden">
+{#if loaded}
+<div class="flex flex-col justify-center origin-center min-h-[100svh] overflow-y-hidden">
     <div class="flex flex-col justify-center items-center h-full">
 <Label class="text-2xl font-light pb-4">Willkommen zum</Label>
 <img src={logo} alt="Logo" class="w-[70%]   " />
@@ -56,3 +63,4 @@ onMount(async ()=>{
 </div>
 
 </div>
+{/if}

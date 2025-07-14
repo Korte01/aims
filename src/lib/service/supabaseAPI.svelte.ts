@@ -67,8 +67,15 @@ export async function loadGames() {
         if(!element.isVs)
        element.results=[element["1Platz"] ?? -1,element["2Platz"] ?? -1,element["3Platz"] ?? -1,element["4Platz"] ?? -1,element["5Platz"] ?? -1,element["6Platz"] ?? -1];
     }
-    const sortedData = data.sort((a, b) => a.index - b.index);
-
+    const sortedData = data.sort((a, b) => {
+      // Erst nach isVisible (true vor false)
+      if (a.visible !== b.visible) {
+        return a.visible ? -1 : 1;
+      }
+    
+      // Dann nach index (aufsteigend)
+      return a.index - b.index;
+    });
      let output = sortedData.map(entry => {
         const cleaned = { ...entry };
         toDelete.forEach(key => delete cleaned[key]);
