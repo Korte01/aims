@@ -92,14 +92,16 @@ return () => {
 </script>
 
 
-<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 px-2">
-    <Label class="abolute px-2 py-1   w-fit text-sm font-medium text-white bg-primary rounded-md">Gesamtpunktestand</Label>
+<div class="grid grid-cols-1  gap-4 px-2 w-full">
+  <div class="max-w-[600px] md:mx-auto md:max-w-[700px] lg:max-w-[900px]">    
+    <Label class=" px-2 py-1   w-fit text-sm font-medium text-white bg-primary rounded-md">Gesamtpunktestand</Label>
+  </div>
 
 	{#each teams as team, i (team.teamName)}
     <div animate:flip>
-        <Card class={`p-4 text-lg ${getBgClass(i)} rounded-2xl shadow-md text-stone-800 relative overflow-hidden shiny`}>
-            <CardContent class="flex items-center justify-between gap-4 relative z-10">
-              <div class="font-black text-xl w-[40px]">{i + 1}.</div>
+        <Card class={` p-4 text-lg max-w-[600px] md:mx-auto md:max-w-[700px] lg:max-w-[900px] ${getBgClass(i)} rounded-2xl  shadow-md text-stone-800 relative overflow-hidden shiny`}>
+            <CardContent class=" min-h-[30px] lg:min-h-[50px] flex items-center justify-between gap-4 relative z-10">
+              <div class="font-black text-xl w-[40px] ">{i + 1}.</div>
               <div class="text-lg font-bold flex-1 truncate">{team.teamName}</div>
               <div class="font-semibold text-right w-[80px]">{team.points}P</div>
             </CardContent>
@@ -112,62 +114,62 @@ return () => {
 </div>
 
 
-<style>
-    :global(.metallic-gradient) {
-        pointer-events: none;
-    background: linear-gradient(
-      45deg,
-      rgba(255, 255, 255, 0.5) 0%,
-      rgba(255, 255, 255, 0.3) 20%,
-      rgba(255, 255, 255, 0.1) 50%,
-      rgba(255, 255, 255, 0.3) 80%,
-      rgba(255, 255, 255, 0.5) 100%
-    );
-    background-size: 300% 300%;
-    animation: shine 10s ease-in-out infinite;
-    mix-blend-mode: screen;
-    border-radius: inherit; /* sorgt für abgerundete Ecken passend zur Card */
-  
+  <style>
+      :global(.metallic-gradient) {
+          pointer-events: none;
+      background: linear-gradient(
+        45deg,
+        rgba(255, 255, 255, 0.5) 0%,
+        rgba(255, 255, 255, 0.3) 20%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0.3) 80%,
+        rgba(255, 255, 255, 0.5) 100%
+      );
+      background-size: 300% 300%;
+      animation: shine 10s ease-in-out infinite;
+      mix-blend-mode: screen;
+      border-radius: inherit; /* sorgt für abgerundete Ecken passend zur Card */
+    
+    }
+    
+    
+    :global(.shiny) {
+    position: relative;
+    overflow: hidden;
   }
-  
-  
-  :global(.shiny) {
-  position: relative;
-  overflow: hidden;
-}
 
-:global(.shiny::before) {
-  content: '';
-  position: absolute;
-  top: 0; bottom: 0;
-  left: -50%;
-  width: 50%;
-  pointer-events: none;
-
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255,255,255,0.15) 30%,
-    rgba(255,255,255,0.5) 50%,
-    rgba(255,255,255,0.15) 70%,
-    transparent 100%
-  );
-
-  filter: blur(10px);
-  transform: skewX(-20deg);
-  animation: shine-move 10s infinite;
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-
-@keyframes shine-move {
-  0% {
+  :global(.shiny::before) {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
     left: -50%;
+    width: 50%;
+    pointer-events: none;
+
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      rgba(255,255,255,0.15) 30%,
+      rgba(255,255,255,0.5) 50%,
+      rgba(255,255,255,0.15) 70%,
+      transparent 100%
+    );
+
+    filter: blur(10px);
+    transform: skewX(-20deg);
+    animation: shine-move 10s infinite;
   }
-  100% {
-    left: 150%;
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
   }
-}
-  </style>
+
+  @keyframes shine-move {
+    0% {
+      left: -50%;
+    }
+    100% {
+      left: 150%;
+    }
+  }
+    </style>
