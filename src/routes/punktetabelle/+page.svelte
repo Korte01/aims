@@ -6,29 +6,27 @@
 	import { onMount } from 'svelte';
 	import Sidebar from '../Sidebar.svelte';
 
-
 	import type { PageData } from './$types';
 	import AlleTabelle from './AlleTabelle.svelte';
 	import GesamtTabelle from './GesamtTabelle.svelte';
 	import { store } from '$lib/store/MainStore.svelte';
-	import { loadActiveRound, loadGames, loadSpielplan, loadTeams } from '$lib/service/supabaseAPI.svelte';
+	import {
+		loadActiveRound,
+		loadGames,
+		loadSpielplan,
+		loadTeams
+	} from '$lib/service/supabaseAPI.svelte';
 	import { supabase } from '$lib/service/supabaseClient';
 
 	let { data }: { data: PageData } = $props();
 
 	onMount(async () => {
-store.teams=await loadTeams();
-store.spielplan=await loadSpielplan();
-
-
+		store.teams = await loadTeams();
+		store.spielplan = await loadSpielplan();
 	});
 </script>
 
 <Sidebar />
-<div class="flex flex-col items-left text-left">
-	<div class="m-2 flex">
-</div>
-</div>
-<div class="flex flex-col items-center text-left">
-	<GesamtTabelle/>
-</div>
+<main class="flex flex-col items-center text-left md:min-h-screen md:bg-stone-100 md:px-8 md:py-8">
+	<GesamtTabelle />
+</main>

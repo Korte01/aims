@@ -1,0 +1,3 @@
+node_invalid_placement_ssr: `<button>` (node_modules/bits-ui/dist/bits/dialog/components/dialog-trigger.svelte:22:8) cannot be a child of `<button>` (node_modules/bits-ui/dist/bits/dialog/components/dialog-trigger.svelte:33:1)
+
+This can cause content to shift around as the browser repairs the HTML, and will likely result in a `hydration_mismatch` warning.
