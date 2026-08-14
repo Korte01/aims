@@ -1,3 +1,18 @@
-node_invalid_placement_ssr: `<button>` (node_modules/bits-ui/dist/bits/dialog/components/dialog-trigger.svelte:22:8) cannot be a child of `<button>` (node_modules/bits-ui/dist/bits/dialog/components/dialog-trigger.svelte:33:1)
+node:fs:2787
+      const stats = binding.lstat(base, true, undefined, true /* throwIfNoEntry */);
+                            ^
 
-This can cause content to shift around as the browser repairs the HTML, and will likely result in a `hydration_mismatch` warning.
+Error: EPERM: operation not permitted, lstat 'C:\Users\Korte'
+    at Object.realpathSync (node:fs:2787:29)
+    at toRealPath (node:internal/modules/helpers:61:13)
+    at Function._findPath (node:internal/modules/cjs/loader:757:22)
+    at resolveMainPath (node:internal/modules/run_main:39:23)
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:162:20)
+    at node:internal/main/run_main_module:36:49 {
+  errno: -4048,
+  code: 'EPERM',
+  syscall: 'lstat',
+  path: 'C:\\Users\\Korte'
+}
+
+Node.js v22.14.0

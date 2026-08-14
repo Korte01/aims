@@ -1,7 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { loadTeams } from '$lib/service/supabaseAPI.svelte';
+	import {
+		loadTeams,
+		loadVotingCategories,
+		loadVotingResults,
+		type VotingCategory
+	} from '$lib/service/supabaseAPI.svelte';
 	import { store } from '$lib/store/MainStore.svelte';
 	import { onMount } from 'svelte';
 
@@ -9,12 +14,6 @@
 		first: number | null;
 		second: number | null;
 		third: number | null;
-	};
-
-	type VotingState = {
-		categories: string[];
-		votes?: Record<string, Vote>;
-		votesByTeam?: Record<string, Record<string, Vote>>;
 	};
 
 	type Result = {
@@ -26,12 +25,11 @@
 		thirdPlaces: number;
 	};
 
-	const storageKey = 'teamVoting';
-	const pointsByPlace = { first: 3, second: 2, third: 1 };
 	const revealOrder = [3, 2, 1];
+	const votingWeights = { first: 3, second: 2, third: 1 };
 
 	let isAdmin = $state(false);
-	let categories = $state<string[]>([]);
+	let categories = $state<VotingCategory[]>([]);
 	let votesByTeam = $state<Record<string, Record<string, Vote>>>({});
 	let currentCategoryIndex = $state(0);
 	let revealedPlaces = $state(0);
@@ -45,7 +43,7 @@
 		}
 
 		void loadInitialData();
-		loadVotingResults();
+		void loadVotingResultsFromDB();
 		window.addEventListener('keydown', handleKeydown);
 
 		return () => window.removeEventListener('keydown', handleKeydown);
@@ -58,25 +56,39 @@
 		if (Array.isArray(loadedTeams)) store.teams = loadedTeams as never[];
 	}
 
-	function loadVotingResults() {
-		const savedVoting = localStorage.getItem(storageKey);
+	async function loadVotingResultsFromDB() {
+		const loadedCategories = await loadVotingCategories();
+		const loadedResults = await loadVotingResults();
 
-		if (!savedVoting) return;
+		if (Array.isArray(loadedCategories)) categories = loadedCategories;
 
-		try {
-			const parsed = JSON.parse(savedVoting) as VotingState;
-			categories = parsed.categories ?? [];
-			votesByTeam = parsed.votesByTeam ?? (parsed.votes ? { 'team-0': parsed.votes } : {});
-		} catch (error) {
-			console.error('Voting-Auswertung konnte nicht gelesen werden:', error);
+		const nextVotesByTeam: Record<string, Record<string, Vote>> = {};
+
+		if (Array.isArray(loadedResults)) {
+			for (const result of loadedResults) {
+				const teamKey = `team-${result.teamID}`;
+
+				nextVotesByTeam[teamKey] = {
+					...(nextVotesByTeam[teamKey] ?? {}),
+					[result.votingID]: {
+						first: result.first_place,
+						second: result.sec_place,
+						third: result.third_place
+					}
+				};
+			}
 		}
+
+		votesByTeam = nextVotesByTeam;
 	}
 
-	function categoryResults(category: string) {
+	function categoryResults(category: VotingCategory | undefined) {
 		const results = new Map<number, Result>();
 
+		if (!category) return [];
+
 		for (const teamVotes of Object.values(votesByTeam)) {
-			const vote = teamVotes[category];
+			const vote = teamVotes[category.id];
 			if (!vote) continue;
 
 			for (const [place, teamId] of Object.entries(vote) as Array<[keyof Vote, number | null]>) {
@@ -91,7 +103,7 @@
 					thirdPlaces: 0
 				};
 
-				result.points += pointsByPlace[place];
+				result.points += votingWeights[place];
 				if (place === 'first') result.firstPlaces += 1;
 				if (place === 'second') result.secondPlaces += 1;
 				if (place === 'third') result.thirdPlaces += 1;
@@ -109,7 +121,7 @@
 	}
 
 	function currentCategory() {
-		return categories[currentCategoryIndex] ?? '';
+		return categories[currentCategoryIndex];
 	}
 
 	function currentResults() {
@@ -190,7 +202,7 @@
 						Voting Auswertung
 					</p>
 					<h1 class="text-3xl font-black md:text-4xl">
-						{currentCategory() || 'Noch keine Kategorien'}
+						{currentCategory()?.name || 'Noch keine Kategorien'}
 					</h1>
 				</div>
 
@@ -273,7 +285,11 @@
 						</Button>
 					</div>
 					<div class="flex gap-2">
-						<Button variant="outline" class="bg-white text-neutral-950" onclick={loadVotingResults}>
+						<Button
+							variant="outline"
+							class="bg-white text-neutral-950"
+							onclick={loadVotingResultsFromDB}
+						>
 							Aktualisieren
 						</Button>
 						<Button variant="outline" class="bg-white text-neutral-950" onclick={resetPresentation}>
@@ -286,8 +302,7 @@
 					<div class="max-w-2xl rounded-lg border border-white/15 bg-white/5 p-8 text-center">
 						<h2 class="text-3xl font-black">Noch keine Voting-Daten gefunden</h2>
 						<p class="mt-3 text-neutral-300">
-							Sobald im Browser unter Voting Stimmen gespeichert sind, erscheint hier die
-							Auswertung.
+							Sobald unter Voting Stimmen gespeichert sind, erscheint hier die Auswertung.
 						</p>
 					</div>
 				</section>

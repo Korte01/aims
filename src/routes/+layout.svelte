@@ -5,16 +5,21 @@
 	import { store } from '$lib/store/MainStore.svelte';
 	import { get } from 'svelte/store';
 	import { page } from '$app/stores';
-	import { loadActiveRound, loadGames, loadSpielplan, loadTeams } from '$lib/service/supabaseAPI.svelte';
+	import {
+		loadActiveRound,
+		loadGames,
+		loadSpielplan,
+		loadTeams,
+		loadToResult
+	} from '$lib/service/supabaseAPI.svelte';
 	import { supabase } from '$lib/service/supabaseClient';
 	import { emitDataChanged } from '$lib/store/eventBus';
 	import Button from '$lib/components/ui/button/button.svelte';
 
-
 	let { children } = $props();
-	
+
 	onMount(async () => {
-		store.teams=await loadTeams();
+		store.teams = await loadTeams();
 		const currentPath = get(page).url.pathname;
 
 		const savedTeamID = localStorage.getItem('teamID');
@@ -32,59 +37,74 @@
 		console.log(loadTeams());
 
 		const teamsSub = supabase
-		.channel('public:teams')
-		.on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, async () => {
-			const teams = await loadTeams();
-			if (Array.isArray(teams)) store.teams = teams;
-			emitDataChanged();
+			.channel('public:teams')
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'teams' }, async () => {
+				const teams = await loadTeams();
+				if (Array.isArray(teams)) store.teams = teams;
+				emitDataChanged();
+			})
+			.subscribe();
 
-		})
-		.subscribe();
+		// Listener für Tabelle "games"
+		const gamesSub = supabase
+			.channel('public:games')
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, async () => {
+				const games = await loadGames();
 
-	// Listener für Tabelle "games"
-	const gamesSub = supabase
-		.channel('public:games')
-		.on('postgres_changes', { event: '*', schema: 'public', table: 'games' }, async () => {
-			const games = await loadGames();
+				if (Array.isArray(games)) store.games = games;
+				emitDataChanged();
+			})
+			.subscribe();
 
-			if (Array.isArray(games)) store.games = games;
-			emitDataChanged();
-		})
-		.subscribe();
+		// Listener für Tabelle "spielplan"
+		const spielplanSub = supabase
+			.channel('public:spielplan')
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'spielplan' }, async () => {
+				const spielplan = await loadSpielplan();
 
-	// Listener für Tabelle "spielplan"
-	const spielplanSub = supabase
-		.channel('public:spielplan')
-		.on('postgres_changes', { event: '*', schema: 'public', table: 'spielplan' }, async () => {
-			const spielplan = await loadSpielplan();
+				if (spielplan) store.spielplan = spielplan;
+				emitDataChanged();
+			})
+			.subscribe();
 
-			if (spielplan) store.spielplan = spielplan;
-			emitDataChanged();
-		})
-		.subscribe();
+		// Listener für aktive Runde
+		const roundSub = supabase
+			.channel('public:general')
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'general' }, async () => {
+				const active = await loadActiveRound();
+				const toResult = await loadToResult();
+				if (typeof active === 'number') store.activeRound = active;
+				if (typeof toResult === 'boolean') store.toResult = toResult;
+				emitDataChanged();
+			})
+			.subscribe();
 
-	// Listener für aktive Runde
-	const roundSub = supabase
-		.channel('public:general')
-		.on('postgres_changes', { event: '*', schema: 'public', table: 'general' }, async () => {
-			const active = await loadActiveRound();
-			if (typeof active === 'number') store.activeRound = active;
-		})
-		.subscribe();
+		const votingSub = supabase
+			.channel('public:voting')
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'voting' }, () => {
+				emitDataChanged();
+			})
+			.subscribe();
 
-	
-	// Cleanup (wenn Komponente entladen wird)
-	return () => {
-		supabase.removeChannel(teamsSub);
-		supabase.removeChannel(gamesSub);
-		supabase.removeChannel(spielplanSub);
-		supabase.removeChannel(roundSub);
-	};
+		const votingResultsSub = supabase
+			.channel('public:voting_results')
+			.on('postgres_changes', { event: '*', schema: 'public', table: 'voting_results' }, () => {
+				emitDataChanged();
+			})
+			.subscribe();
+
+		// Cleanup (wenn Komponente entladen wird)
+		return () => {
+			supabase.removeChannel(teamsSub);
+			supabase.removeChannel(gamesSub);
+			supabase.removeChannel(spielplanSub);
+			supabase.removeChannel(roundSub);
+			supabase.removeChannel(votingSub);
+			supabase.removeChannel(votingResultsSub);
+		};
 	});
 </script>
-
 
 <div></div>
 
 {@render children()}
-

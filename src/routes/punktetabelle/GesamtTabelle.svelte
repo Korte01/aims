@@ -3,16 +3,83 @@
 	import Card from '$lib/components/ui/card/card.svelte';
 	import { store } from '$lib/store/MainStore.svelte';
 	import { onMount } from 'svelte';
-	import { loadGames, loadSpielplan, loadTeams } from '$lib/service/supabaseAPI.svelte';
+	import {
+		loadGames,
+		loadSpielplan,
+		loadTeams,
+		loadToResult,
+		loadVotingCategories,
+		loadVotingResults,
+		type VotingCategory,
+		type VotingResult
+	} from '$lib/service/supabaseAPI.svelte';
 	import { onDataChanged } from '$lib/store/eventBus';
 	import { flip } from 'svelte/animate';
 
 	let teams: { teamId: number; teamName: string; points: number }[] = $state([]);
+	let votingCategories: VotingCategory[] = $state([]);
+	let votingResults: VotingResult[] = $state([]);
 	let points = [10, 8, 6, 4, 2, 0];
+	const votingWeights = { first: 3, second: 2, third: 1 };
+
+	function votingPointsByTeam() {
+		const pointsByTeam = new Map<number, number>();
+
+		for (const category of votingCategories) {
+			const voteScores = new Map<
+				number,
+				{ points: number; firstPlaces: number; secondPlaces: number; thirdPlaces: number }
+			>();
+
+			for (const result of votingResults.filter((vote) => vote.votingID === category.id)) {
+				const votes = [
+					{ teamId: result.first_place, points: votingWeights.first, place: 'first' },
+					{ teamId: result.sec_place, points: votingWeights.second, place: 'second' },
+					{ teamId: result.third_place, points: votingWeights.third, place: 'third' }
+				] as const;
+
+				for (const vote of votes) {
+					if (vote.teamId === null) continue;
+
+					const score = voteScores.get(vote.teamId) ?? {
+						points: 0,
+						firstPlaces: 0,
+						secondPlaces: 0,
+						thirdPlaces: 0
+					};
+
+					score.points += vote.points;
+					if (vote.place === 'first') score.firstPlaces += 1;
+					if (vote.place === 'second') score.secondPlaces += 1;
+					if (vote.place === 'third') score.thirdPlaces += 1;
+					voteScores.set(vote.teamId, score);
+				}
+			}
+
+			[...voteScores.entries()]
+				.sort(([, a], [, b]) => {
+					if (b.points !== a.points) return b.points - a.points;
+					if (b.firstPlaces !== a.firstPlaces) return b.firstPlaces - a.firstPlaces;
+					if (b.secondPlaces !== a.secondPlaces) return b.secondPlaces - a.secondPlaces;
+					return b.thirdPlaces - a.thirdPlaces;
+				})
+				.slice(0, 3)
+				.forEach(([teamId], place) => {
+					const resultPoints = [category.first_points, category.sec_points, category.third_points][
+						place
+					];
+
+					pointsByTeam.set(teamId, (pointsByTeam.get(teamId) ?? 0) + resultPoints);
+				});
+		}
+
+		return pointsByTeam;
+	}
 
 	function buildResults() {
 		let result = [];
 		let allteams = store.teams;
+		const votingPoints = store.toResult ? votingPointsByTeam() : new Map<number, number>();
 		let i = 0;
 
 		for (const team of allteams as any[]) {
@@ -30,6 +97,8 @@
 					if (match.winner == i) gesPoints += 8;
 				}
 			}
+
+			gesPoints += votingPoints.get(i) ?? 0;
 
 			result.push({ teamId: i, teamName: team, points: gesPoints });
 			i++;
@@ -65,9 +134,23 @@
 			store.games = (await loadGames()) as any;
 			store.spielplan = (await loadSpielplan()) as any;
 			store.teams = (await loadTeams()) as any;
+			const votingToResult = await loadToResult();
+			const loadedVotingCategories = await loadVotingCategories();
+			const loadedVotingResults = await loadVotingResults();
+
+			if (typeof votingToResult === 'boolean') store.toResult = votingToResult;
+			if (Array.isArray(loadedVotingCategories)) votingCategories = loadedVotingCategories;
+			if (Array.isArray(loadedVotingResults)) votingResults = loadedVotingResults;
 			buildResults();
 
 			unsubscribe = onDataChanged(async () => {
+				const votingToResult = await loadToResult();
+				const loadedVotingCategories = await loadVotingCategories();
+				const loadedVotingResults = await loadVotingResults();
+
+				if (typeof votingToResult === 'boolean') store.toResult = votingToResult;
+				if (Array.isArray(loadedVotingCategories)) votingCategories = loadedVotingCategories;
+				if (Array.isArray(loadedVotingResults)) votingResults = loadedVotingResults;
 				buildResults();
 			});
 		}
