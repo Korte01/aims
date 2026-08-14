@@ -1,7 +1,6 @@
 <script lang="ts">
 	import CardContent from '$lib/components/ui/card/card-content.svelte';
 	import Card from '$lib/components/ui/card/card.svelte';
-	import Label from '$lib/components/ui/label/label.svelte';
 	import { store } from '$lib/store/MainStore.svelte';
 	import { onMount } from 'svelte';
 	import { loadGames, loadSpielplan, loadTeams } from '$lib/service/supabaseAPI.svelte';
@@ -59,30 +58,6 @@
 		return `${index + 1}.`;
 	}
 
-	function podiumOrder(): {
-		team: { teamId: number; teamName: string; points: number };
-		rank: number;
-	}[] {
-		const orderedRanks = [1, 0, 2];
-		return orderedRanks
-			.map((rank) => {
-				const team = teams[rank];
-				return team ? { team, rank } : null;
-			})
-			.filter(
-				(
-					entry
-				): entry is { team: { teamId: number; teamName: string; points: number }; rank: number } =>
-					Boolean(entry)
-			);
-	}
-
-	function podiumHeight(rank: number): string {
-		if (rank === 0) return 'min-h-[220px]';
-		if (rank === 1) return 'min-h-[180px] mt-10';
-		return 'min-h-[160px] mt-16';
-	}
-
 	onMount(() => {
 		let unsubscribe: (() => void) | undefined;
 
@@ -105,150 +80,76 @@
 	});
 </script>
 
-<div class="grid w-full grid-cols-1 gap-4 px-2 md:hidden">
-	<div class="max-w-[600px] md:mx-auto md:max-w-[700px] lg:max-w-[900px]">
-		<Label class=" bg-primary w-fit   rounded-md px-2 py-1 text-sm font-medium text-white"
-			>Gesamtpunktestand</Label
-		>
-	</div>
-
-	{#each teams as team, i (team.teamName)}
-		<div animate:flip>
-			<Card
-				class={` max-w-[600px] p-4 text-lg md:mx-auto md:max-w-[700px] lg:max-w-[900px] ${podiumClass(i)} shiny  relative overflow-hidden rounded-2xl text-stone-800 shadow-md`}
-			>
-				<CardContent
-					class=" relative z-10 flex min-h-[30px] items-center justify-between gap-4 lg:min-h-[50px]"
-				>
-					<div class="w-[40px] text-xl font-black">{i + 1}.</div>
-					<div class="flex-1 truncate text-lg font-bold">{team.teamName}</div>
-					<div class="w-[80px] text-right font-semibold">{team.points}P</div>
-				</CardContent>
-
-				<!-- Metallischer Overlay -->
-				<div class="metallic-gradient pointer-events-none absolute inset-0"></div>
-			</Card>
-		</div>
-	{/each}
-</div>
-
-<div class="hidden w-full px-2 md:block">
-	<div class="mx-auto mb-4 max-w-5xl">
-		<Label class="bg-primary w-fit rounded-md px-2 py-1 text-sm font-medium text-white">
+<section class="w-full max-w-7xl px-2 pb-10 md:px-0">
+	<div class="grid grid-cols-1 gap-4 md:hidden">
+		<div class="bg-primary w-fit rounded-md px-2 py-1 text-sm font-medium text-white">
 			Gesamtpunktestand
-		</Label>
-	</div>
+		</div>
 
-	<div class="mx-auto grid max-w-5xl grid-cols-3 items-end gap-4">
-		{#each podiumOrder() as { team, rank } (team.teamName)}
+		{#each teams as team, i (team.teamName)}
 			<div animate:flip>
 				<Card
-					class={`h-full overflow-hidden rounded-t-lg rounded-b-none border-2 border-b-0 ${podiumClass(rank)} shiny relative text-stone-900 shadow-sm ${podiumHeight(rank)}`}
+					class={`relative overflow-hidden rounded-2xl p-4 text-lg ${mobileRankClass(i)} text-stone-800 shadow-md`}
 				>
-					<CardContent class="relative z-10 flex h-full flex-col justify-between p-5">
-						<div class="flex items-start justify-between gap-3">
-							<div class="text-6xl font-black text-stone-400">{rankLabel(rank)}</div>
-							<div
-								class={`rounded-full px-3 py-2 text-center text-lg font-black text-stone-900 shadow-sm ${mobileRankClass(rank)}`}
-							>
-								{team.points}P
-							</div>
-						</div>
-						<div class="min-w-0">
-							<div class="truncate text-2xl font-black">{team.teamName}</div>
-							<div class="mt-1 text-sm font-medium text-stone-500">Platz {rank + 1}</div>
-						</div>
+					<CardContent class="relative z-10 flex items-center justify-between gap-4">
+						<div class="w-[40px] text-xl font-black">{i + 1}.</div>
+						<div class="flex-1 truncate text-lg font-bold">{team.teamName}</div>
+						<div class="w-[80px] text-right font-semibold">{team.points}P</div>
 					</CardContent>
-
-					<div class="metallic-gradient pointer-events-none absolute inset-0"></div>
 				</Card>
 			</div>
 		{/each}
 	</div>
 
-	{#if teams.length > 3}
-		<div class="mx-auto mt-4 grid max-w-5xl grid-cols-1 gap-3">
-			{#each teams.slice(3) as team, i (team.teamName)}
-				<div animate:flip>
-					<Card
-						class="shiny relative overflow-hidden rounded-lg border border-stone-200 bg-white text-stone-800 shadow-sm"
-					>
-						<CardContent
-							class="relative z-10 grid grid-cols-[72px_1fr_90px] items-center gap-4 p-4"
-						>
-							<div class="text-3xl font-black text-stone-400">{i + 4}.</div>
-							<div class="truncate text-lg font-bold">{team.teamName}</div>
-							<div class="text-right text-lg font-black text-[#1cd086]">{team.points}P</div>
-						</CardContent>
-
-						<div class="metallic-gradient pointer-events-none absolute inset-0"></div>
-					</Card>
-				</div>
-			{/each}
+	<div class="hidden md:block">
+		<div class="mb-8 flex flex-col items-center gap-1 text-center">
+			<p class="text-sm font-semibold tracking-[0.18em] text-[#1cd086] uppercase">Gesamtwertung</p>
+			<h1 class="text-5xl font-black text-stone-900">Punktestand</h1>
 		</div>
-	{/if}
-</div>
 
-<style>
-	:global(.metallic-gradient) {
-		pointer-events: none;
-		background: linear-gradient(
-			45deg,
-			rgba(255, 255, 255, 0.5) 0%,
-			rgba(255, 255, 255, 0.3) 20%,
-			rgba(255, 255, 255, 0.1) 50%,
-			rgba(255, 255, 255, 0.3) 80%,
-			rgba(255, 255, 255, 0.5) 100%
-		);
-		background-size: 300% 300%;
-		animation: shine 10s ease-in-out infinite;
-		mix-blend-mode: screen;
-		border-radius: inherit; /* sorgt für abgerundete Ecken passend zur Card */
-	}
+		{#if teams.length > 0}
+			<div class="grid gap-4 md:grid-cols-3 md:items-end">
+				{#each teams.slice(0, 3) as team, i (team.teamName)}
+					<div animate:flip class={i === 0 ? 'md:order-2' : i === 1 ? 'md:order-1' : 'md:order-3'}>
+						<Card
+							class={`relative overflow-hidden rounded-lg border-2 ${podiumClass(i)} p-5 text-stone-900 shadow-sm ${i === 0 ? 'md:min-h-56' : 'md:min-h-44'}`}
+						>
+							<CardContent class="relative z-10 flex h-full flex-col gap-5 p-0">
+								<div class="flex items-center justify-between">
+									<div class="text-7xl font-black">{rankLabel(i)}</div>
+									<div class="rounded-full bg-white px-4 py-2 text-xl font-black shadow-sm">
+										{team.points}P
+									</div>
+								</div>
+								<div>
+									<div class="truncate text-3xl font-black">{team.teamName}</div>
+									<div class="mt-1 text-sm font-medium text-stone-500">Team #{team.teamId + 1}</div>
+								</div>
+							</CardContent>
+							<div
+								class="absolute right-0 bottom-0 h-28 w-28 translate-x-8 translate-y-8 rounded-full bg-white/60"
+							></div>
+						</Card>
+					</div>
+				{/each}
+			</div>
 
-	:global(.shiny) {
-		position: relative;
-		overflow: hidden;
-	}
-
-	:global(.shiny::before) {
-		content: '';
-		position: absolute;
-		top: 0;
-		bottom: 0;
-		left: -50%;
-		width: 50%;
-		pointer-events: none;
-
-		background: linear-gradient(
-			90deg,
-			transparent 0%,
-			rgba(255, 255, 255, 0.15) 30%,
-			rgba(255, 255, 255, 0.5) 50%,
-			rgba(255, 255, 255, 0.15) 70%,
-			transparent 100%
-		);
-
-		filter: blur(10px);
-		transform: skewX(-20deg);
-		animation: shine-move 10s infinite;
-	}
-	@keyframes float {
-		0%,
-		100% {
-			transform: translateY(0);
-		}
-		50% {
-			transform: translateY(-10px);
-		}
-	}
-
-	@keyframes shine-move {
-		0% {
-			left: -50%;
-		}
-		100% {
-			left: 150%;
-		}
-	}
-</style>
+			{#if teams.length > 3}
+				<div class="mt-6 overflow-hidden rounded-lg border border-stone-200 bg-white shadow-sm">
+					{#each teams.slice(3) as team, i (team.teamName)}
+						<div
+							animate:flip
+							class="grid grid-cols-[88px_1fr_120px] items-center gap-4 border-b border-stone-100 px-7 py-4 last:border-b-0"
+						>
+							<div class="text-2xl font-black text-stone-400">{rankLabel(i + 3)}</div>
+							<div class="min-w-0 truncate text-xl font-bold text-stone-900">
+								{team.teamName}
+							</div>
+							<div class="text-right text-xl font-black text-[#1cd086]">{team.points}P</div>
+						</div>
+					{/each}
+				</div>
+			{/if}
+		{/if}
+	</div>
+</section>
